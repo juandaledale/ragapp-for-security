@@ -22,7 +22,7 @@
 ./static
 
 # Ignore development create_llama code
-./create_llama/
+
 ./storage/
 ./static/
 ./data/

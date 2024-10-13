@@ -6,7 +6,7 @@ load_dotenv(dotenv_path=ENV_FILE_PATH, verbose=False, override=True)
 # flake8: noqa
 import logging
 import os
-
+import torch
 import uvicorn
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,7 +21,7 @@ from backend.routers.chat.index import chat_router
 from backend.routers.management import management_router
 from backend.middlewares.rate_limit import request_limit_middleware
 
-
+print(torch.cuda.is_available())  # Should return True if GPU is available
 init_settings()
 
 app = FastAPI(

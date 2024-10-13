@@ -52,6 +52,9 @@ llama-index-indices-managed-llama-cloud = "^0.3.0"
 llama-index-postprocessor-cohere-rerank = "^0.2.0"
 scapy = "^2.6.0"
 pytz = "^2024.2"
+llama-index-vector-stores-faiss = "^0.2.1"
+torch = "^2.4.1"
+sentence-transformers = "^3.2.0"
 
 
 
