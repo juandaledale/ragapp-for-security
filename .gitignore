@@ -3,7 +3,7 @@
 **/.mypy_cache/
 **/node_modules/
 **/static/
-
+create_llama/
 **/*.sqlite
 
 # deployments

@@ -6,22 +6,22 @@ export NEXT_PUBLIC_API_URL=/api/chat
 
 create-llama-app:
 	@echo "\nCreating Llama App..."
-	# rm -rf create_llama
-	# npx -y create-llama@${CREATE_LLAMA_VERSION} \
-	#     --use-pnpm \
-	# 	--framework fastapi \
-	# 	--template streaming \
-	# 	--engine context \
-	# 	--frontend \
-	# 	--ui shadcn \
-	# 	--observability none \
-	# 	--open-ai-key none \
-	# 	--tools none \
-	# 	--post-install-action none \
-	# 	--no-llama-parse \
-	# 	--no-files \
-	# 	--vector-db chroma \
-	# 	-- create_llama
+	rm -rf create_llama
+	npx -y create-llama@${CREATE_LLAMA_VERSION} \
+	    --use-pnpm \
+		--framework fastapi \
+		--template streaming \
+		--engine context \
+		--frontend \
+		--ui shadcn \
+		--observability none \
+		--open-ai-key none \
+		--tools none \
+		--post-install-action none \
+		--no-llama-parse \
+		--no-files \
+		--vector-db chroma \
+		-- create_llama
 	# We don't need the example data and default .env files
 	rm -rf create_llama/backend/data/*
 	rm -rf create_llama/backend/.env

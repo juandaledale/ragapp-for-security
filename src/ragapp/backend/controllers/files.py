@@ -3,6 +3,7 @@ import csv
 import io
 from datetime import datetime
 import pytz
+import asyncio
 from backend.models.file import SUPPORTED_FILE_EXTENSIONS, File, FileStatus
 from backend.tasks.indexing import index_all
 from scapy.all import PcapReader
@@ -12,7 +13,7 @@ class UnsupportedFileExtensionError(Exception):
     pass
 
 
-class FileNotFoundError(Exception):
+class CustomFileNotFoundError(Exception):
     pass
 
 
@@ -20,7 +21,7 @@ class FileHandler:
     @classmethod
     def get_current_files(cls):
         """
-        Construct the list files by all the files in the data folder.
+        Construct the list of files by all the files in the data folder.
         """
         if not os.path.exists("data"):
             return []
@@ -30,7 +31,7 @@ class FileHandler:
         return [
             File(name=file_name, status=FileStatus.UPLOADED) for file_name in file_names
         ]
-    
+
     @classmethod
     def get_local_time(cls):
         """
@@ -43,25 +44,25 @@ class FileHandler:
 
     @classmethod
     async def upload_file(
-        cls, file, file_name: str, fileIndex: str, totalFiles: str
-    ) -> File | UnsupportedFileExtensionError:
+        cls, file, file_name: str, fileIndex: int, totalFiles: int
+    ) -> File:
         """
         Upload a file to the data folder.
         """
         file_extension = file.filename.split('.')[-1]
 
         if file_extension not in SUPPORTED_FILE_EXTENSIONS:
-            return UnsupportedFileExtensionError(
-                f"File {file_name} with extension {file_name.split('.')[-1]} is not supported."
+            raise UnsupportedFileExtensionError(
+                f"File {file_name} with extension {file_extension} is not supported."
             )
-        
+
         if not os.path.exists("data"):
             os.makedirs("data")
 
         if file_extension == "pcapng":
             contents = await file.read()
             pcap_data = PcapReader(io.BytesIO(contents))
-            
+
             csv_output = io.BytesIO()
             csv_writer = csv.writer(io.TextIOWrapper(csv_output, newline='', encoding='utf-8'))
 
@@ -69,9 +70,11 @@ class FileHandler:
             csv_writer.writerow(["Timestamp", "Source", "Destination", "Protocol", "Length"])
 
             for packet in pcap_data:
-                 if hasattr(packet, 'time') and hasattr(packet, 'src') and hasattr(packet, 'dst'):
-                    # Convert packet time (EDecimal) to local timezone
-                    packet_time = datetime.fromtimestamp(float(packet.time), tz=pytz.utc).astimezone(pytz.timezone(os.environ.get('TZ', 'UTC')))
+                if hasattr(packet, 'time') and hasattr(packet, 'src') and hasattr(packet, 'dst'):
+                    # Convert packet time to local timezone
+                    packet_time = datetime.fromtimestamp(float(packet.time), tz=pytz.utc).astimezone(
+                        pytz.timezone(os.environ.get('TZ', 'UTC'))
+                    )
                     proto = getattr(packet, 'proto', 'N/A')
                     length = len(packet)
                     csv_writer.writerow([packet_time.isoformat(), packet.src, packet.dst, proto, length])
@@ -79,13 +82,13 @@ class FileHandler:
             csv_output.seek(0)
             # Create the CSV filename based on the original file name
             csv_file_name = f"{os.path.splitext(file_name)[0]}.csv"
-            
+
             with open(f"data/{csv_file_name}", "wb") as f:
                 f.write(csv_output.getvalue())
 
             # Index the data only when it is the last file to upload
             if fileIndex == totalFiles:
-                index_all()
+                await asyncio.to_thread(index_all)
             return File(name=csv_file_name, status=FileStatus.UPLOADED)
 
         # Handle normal file uploads
@@ -94,7 +97,7 @@ class FileHandler:
 
         # Index the data
         if fileIndex == totalFiles:
-            index_all()
+            await asyncio.to_thread(index_all)
         return File(name=file_name, status=FileStatus.UPLOADED)
 
     @classmethod
@@ -102,6 +105,9 @@ class FileHandler:
         """
         Remove a file from the data folder.
         """
-        os.remove(f"data/{file_name}")
+        file_path = os.path.join("data", file_name)
+        if not os.path.exists(file_path):
+            raise CustomFileNotFoundError(f"File {file_name} does not exist.")
+        os.remove(file_path)
         # Re-index the data
-        index_all()
+        asyncio.run(asyncio.to_thread(index_all))
