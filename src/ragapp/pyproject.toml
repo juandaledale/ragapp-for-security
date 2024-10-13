@@ -51,6 +51,7 @@ llama-index-tools-requests = "^0.2.0"
 llama-index-indices-managed-llama-cloud = "^0.3.0"
 llama-index-postprocessor-cohere-rerank = "^0.2.0"
 scapy = "^2.6.0"
+pytz = "^2024.2"
 
 
 
