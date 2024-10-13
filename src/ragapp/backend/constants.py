@@ -2,10 +2,14 @@ ENV_FILE_PATH = "config/.env"
 TOOL_CONFIG_FILE = "config/tools.yaml"
 LOADER_CONFIG_FILE = "config/loaders.yaml"
 AGENT_CONFIG_FILE = "config/agents.yaml"
-
+import datetime
 
 DEFAULT_SYSTEM_PROMPT = (
-    "You are a helpful assistant who helps users with their questions."
+    
+    "You are a helpful assistant who helps users with their questions.",
+    "You have access to tools that can help you answer questions.",
+    "Please follow the instructions and correlate with you vector colletions."
+    "current Date and time" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 )
 
 SYSTEM_PROMPT_WITH_TOOLS_TPL = """
